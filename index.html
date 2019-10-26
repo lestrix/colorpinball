@@ -4,12 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Color Pinball</title>
   <style>
-    canvas {
-      width: 100vw;
-      height: auto;
+    /* box-sizing reset */
+    *, *::before, *::after { box-sizing: border-box }
+
+    html {
+      width: 100%;
+      height: 100%;
     }
+
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+      overflow: hidden;
+    }
+
+    canvas {
+      background-color: #000;
+      box-shadow: 0 0 2em #fff;
+    }
+
+    #debug {
+      font-family: monospace;
+      background-color: #111;
+      color: #bbb;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      padding: .25em;
+    }
+
+    #debug::before { content: 'debug: ' }
   </style>
 </head>
 <body>
