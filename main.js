@@ -85,7 +85,6 @@
       if (ent.fixed) return;
       collidableEntities.forEach(function (otherEnt) {
         if (this === otherEnt) return;
-        debugger;
         if (this.collisionCheck(otherEnt)) {
           console.log('collision');
         }
@@ -155,7 +154,7 @@
   };
   Ball.prototype.collisionCheck = function (otherEnt) {
     // TODO Handle other shapes than balls
-    const centerDistance = Math.sqrt(Math.pow(this.x - otherEnt.x) + Math.pow(this.y - otherEnt.y));
+    const centerDistance = Math.sqrt(Math.pow(this.x - otherEnt.x, 2) + Math.pow(this.y - otherEnt.y, 2));
     return centerDistance < this.radius + otherEnt.radius;
   };
 
