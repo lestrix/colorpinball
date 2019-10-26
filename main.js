@@ -1,10 +1,15 @@
 (function(){
   "use strict";
 
+  const container = document.body;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const debugElement = document.getElementById('debug');
+
   // Configs
   const maxDelta = 50; // Clamp update timestep, to avoid large skips
   const aspectRatio = 1.65;
-  const gameWidth = 100;
+  const gameWidth = canvas.width;
   const gameHeight = gameWidth / aspectRatio;
   const slowMo = 0; // Slow motion factor to slow the loop down for debugging
   const colors = [[0xef, 0xe4, 0x00], [0xe4, 0x07, 0x66]]; // Player colors
@@ -13,10 +18,7 @@
   const tau = Math.PI * 2;
   const t0 = new Date();
 
-  const container = document.body;
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const debugElement = document.getElementById('debug');
+
 
   // Game State
   const state = {
@@ -27,13 +29,14 @@
   let loops = 0;
   let lastTime = 0; // Timestamp of the last loop run
   let zoomFactor = 1; // Scaling to render at full resolution of the canvas
+  let engine = null;
 
   // Helper functions
 
   // Print the argument for debugging and return it, so the function can be
   // inserted in most places seamlessly.
   function debug(value) {
-    debugElement.textContent = JSON.stringify(value, null, 2);
+    // debugElement.textContent = JSON.stringify(value, null, 2);
     return value;
   }
 
@@ -69,10 +72,18 @@
     },
   };
 
+  const updatePhysics = {
+    update: function (ent) {
+      ent.x = ent.physicsObject.position.x;
+      ent.y = ent.physicsObject.position.y;
+    }
+  };
+
   const moves = {
     update: function (ent, delta) {
-      ent.x += Math.cos(ent.dir) * ent.v * delta;
-      ent.y += Math.sin(ent.dir) * ent.v * delta;
+      // if (ent.fixed) return;
+      ent.x += ent.dx * delta;
+      ent.y += ent.dy * delta;
     },
   };
 
@@ -84,38 +95,68 @@
     },
     update: function (ent) {
       if (ent.fixed) return;
+      const collidingPairs = [];
       collidableEntities.forEach(function (otherEnt) {
         if (this === otherEnt) return;
-        if (this.collisionCheck(otherEnt)) {
-          console.log('collision');
+        if (collidingPairs.some( (pair) => pair[0] === otherEnt  && pair[1] === this)) return;
+
+        const centerDistance = Math.sqrt(Math.pow(this.x - otherEnt.x, 2) + Math.pow(this.y - otherEnt.y, 2));
+        if (centerDistance < this.radius + otherEnt.radius) {
+          var theta1 = this.angle();
+          var theta2 = otherEnt.angle();
+          var phi = Math.atan2(otherEnt.y - this.y, otherEnt.x - this.x);
+          var m1 = this.mass;
+          var m2 = otherEnt.mass;
+          var v1 = this.speed();
+          var v2 = otherEnt.speed();
+
+          var dx1F = (v1 * Math.cos(theta1 - phi) * (m1-m2) + 2*m2*v2*Math.cos(theta2 - phi)) / (m1+m2) * Math.cos(phi) + v1*Math.sin(theta1-phi) * Math.cos(phi+Math.PI/2);
+          var dy1F = (v1 * Math.cos(theta1 - phi) * (m1-m2) + 2*m2*v2*Math.cos(theta2 - phi)) / (m1+m2) * Math.sin(phi) + v1*Math.sin(theta1-phi) * Math.sin(phi+Math.PI/2);
+          var dx2F = (v2 * Math.cos(theta2 - phi) * (m2-m1) + 2*m1*v1*Math.cos(theta1 - phi)) / (m1+m2) * Math.cos(phi) + v2*Math.sin(theta2-phi) * Math.cos(phi+Math.PI/2);
+          var dy2F = (v2 * Math.cos(theta2 - phi) * (m2-m1) + 2*m1*v1*Math.cos(theta1 - phi)) / (m1+m2) * Math.sin(phi) + v2*Math.sin(theta2-phi) * Math.sin(phi+Math.PI/2);
+
+          this.dx = dx1F;
+          this.dy = dy1F;
+          if (otherEnt.fixed !== true) {
+
+            otherEnt.dx = dx2F;
+            otherEnt.dy = dy2F;
+
+          }
+          console.log('colliding')
+          collidingPairs.push([this, otherEnt]);
+
+
         }
       }, ent);
+      debug(collidingPairs);
     },
   };
 
   const isBounded = {
     update: function (ent, delta) {
       if (ent.y + ent.radius >= gameHeight / 2 ) { // top
-        ent.y = gameHeight / 2 - ent.radius;
-        ent.dir = (tau - ent.dir) % tau;
+        ent.dy *= -1;
       }
       if (ent.x + ent.radius >= gameWidth / 2 ) { // right
-        ent.x = gameWidth / 2 - ent.radius;
-        ent.dir = (tau - ent.dir + Math.PI) % tau;
+        ent.dx *= -1;
       }
       if (-ent.y + ent.radius >= gameHeight / 2 ) { // bottom
-        ent.y = -gameHeight / 2 + ent.radius;
-        ent.dir = (tau - ent.dir) % tau;
+        ent.dy *= -1;
       }
       if (-ent.x + ent.radius >= gameWidth / 2 ) { // left
-        ent.x = -gameWidth / 2 + ent.radius;
-        ent.dir = (tau - ent.dir + Math.PI) % tau;
+        ent.dx *= -1;
       }
     }
   };
 
   // Basic entity type - handles applying an entity's traits
   const Entity = function () {};
+  Entity.prototype.create = function (created) {
+    this.traits.forEach(function (trait) {
+      if (typeof trait.create === 'function') trait.create(created)
+    })
+  };
   Entity.prototype.update = function (delta) {
     this.traits.forEach(function (trait) {
       if (typeof trait.update === 'function') trait.update(this, delta);
@@ -155,8 +196,14 @@
   Ball.prototype.super = Entity.prototype;
   Ball.prototype.maxTraceLength = 32;
   Ball.prototype.defaults = {
-    x: 0, y: 0, radius: 4, v: 0, dir: 0, color: [255, 255, 255], fixed: false,
+    x: 0, y: 0, radius: 4, dx: 0, dy: 0, color: [255, 255, 255], fixed: false,
   };
+  Ball.prototype.angle = function () {
+    return Math.atan2(this.dy, this.dx);
+  }
+  Ball.prototype.speed = function () {
+    return Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+  }
   Ball.prototype.traits = [
     hasTrace, moves, collides, isBounded,
   ];
@@ -173,11 +220,6 @@
       xMin: this.x - this.radius, xMax: this.x + this.radius,
       yMin: this.y - this.radius, yMax: this.y + this.radius,
     };
-  };
-  Ball.prototype.collisionCheck = function (otherEnt) {
-    // TODO Handle other shapes than balls
-    const centerDistance = Math.sqrt(Math.pow(this.x - otherEnt.x, 2) + Math.pow(this.y - otherEnt.y, 2));
-    return centerDistance < this.radius + otherEnt.radius;
   };
 
   // Adjust the canvas size to the container size in case it changed
@@ -245,8 +287,11 @@
     //debug({ zoomFactor, w: canvas.width, h: canvas.height, loops, b: state.objects[0] });
   }
 
-  state.objects.push(new Ball({ x:  0, y:  0, v: 0.009,  dir:  3.14, radius: 5, color: colors[0] }));
-  state.objects.push(new Ball({ x: 10, y: 20, v: 0.008, dir: -1, radius: 3, color: colors[1] }));
+
+  state.objects.push(new Ball({ x:  0, y:  0, dx: 0.0, dy: 0.0, radius: 5, fixed: true, color: colors[0], mass: 999999 }));
+  state.objects.push(new Ball({ x: 10, y: 20, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[1], mass: 1 }));
+  state.objects.push(new Ball({ x: 40, y: 10, dx: 0.03, dy: 0.03, radius: 5, fixed: false, color: colors[0], mass: 1 }));
+  // state.objects.push(new Ball({ x: 10, y: -30, dx: 0.04, dy: 0.04, radius: 4, color: colors[1] }));
 
   // Start looping
   loop(0);
