@@ -1,7 +1,11 @@
 (function(){
   "use strict";
 
+  // configs
   const maxDelta = 50;
+  const aspectRatio = 1.65;
+  const gameWidth = 100;
+
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
   const status = document.getElementById('status');
@@ -26,14 +30,21 @@
 
   function resizeCanvas() {
     const currentSize = getCanvasSize();
-    if (currentSize.width !== lastSize.width) {
-      canvas.width = currentSize.width;
-      lastSize.width = currentSize.width; 
-    }
-    if (currentSize.height !== lastSize.height) {
-      canvas.height = currentSize.height;
+    if (currentSize.width !== lastSize.width
+      || currentSize.height !== lastSize.height
+    ) {
+      if (currentSize.width * aspectRatio > currentSize.height) {
+        canvas.height = currentSize.height;
+        canvas.width = currentSize.height * aspectRatio;
+      } else {
+        canvas.width = currentSize.width;
+        canvas.height = currentSize.width / aspectRatio;
+      }
+      zoomFactor = currentSize.width / gameWidth;
+      lastSize.width = currentSize.width;
       lastSize.height = currentSize.height;
     }
+    status.textContent = JSON.stringify(zoomFactor);
   }
 
   function update(timestamp) {
@@ -42,7 +53,7 @@
       obj.x = obj.x + Math.cos(obj.angle) * obj.v * delta;
       obj.y = obj.y + Math.sin(obj.angle) * obj.v * delta;
       // status.textContent = JSON.stringify(obj);
-      status.textContent = JSON.stringify(lastSize)
+      // status.textContent = JSON.stringify(lastSize)
 
     });
   }
