@@ -121,7 +121,8 @@
 
             otherEnt.dx = dx2F;
             otherEnt.dy = dy2F;
-
+          } else {
+            otherEnt.color = this.color;
           }
           console.log('colliding')
           collidingPairs.push([this, otherEnt]);
