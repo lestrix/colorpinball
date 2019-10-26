@@ -6,14 +6,12 @@
   const aspectRatio = 1.65;
   const gameWidth = 100;
 
+  const container = document.body;
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
-  const status = document.getElementById('status');
-  let lastTime = 0;
-  let zoomFactor = 1;
-  let lastSize = getCanvasSize();
+  const debugElement = document.getElementById('debug');
 
-
+  // Game State
   const state = {
     objects: [
       { type: 'ball', x: 0, y: 0, v: 0.001, angle: 1, radius: 5 },
@@ -21,55 +19,63 @@
     ],
   };
 
-  function getCanvasSize() {
+  const lastContainerSize = { width: 0, height: 0 };
+  let lastTime = 0;
+  let zoomFactor = 1;
+
+  function debug(value) {
+    debugElement.textContent = JSON.stringify(value);
+  }
+
+  function getNodeSize(node) {
     return {
-      width: canvas.clientWidth,
-      height: canvas.clientHeight,
+      width: node.clientWidth,
+      height: node.clientHeight,
     };
   }
 
   function resizeCanvas() {
-    const currentSize = getCanvasSize();
-    if (currentSize.width !== lastSize.width
-      || currentSize.height !== lastSize.height
+    const currentContainerSize = getNodeSize(container);
+    if (currentContainerSize.width !== lastContainerSize.width
+      || currentContainerSize.height !== lastContainerSize.height
     ) {
-      if (currentSize.width * aspectRatio > currentSize.height) {
-        canvas.height = currentSize.height;
-        canvas.width = currentSize.height * aspectRatio;
+      if (currentContainerSize.width / aspectRatio > currentContainerSize.height) {
+        canvas.height = currentContainerSize.height;
+        canvas.width = currentContainerSize.height * aspectRatio;
       } else {
-        canvas.width = currentSize.width;
-        canvas.height = currentSize.width / aspectRatio;
+        canvas.width = currentContainerSize.width;
+        canvas.height = currentContainerSize.width / aspectRatio;
       }
-      zoomFactor = currentSize.width / gameWidth;
-      lastSize.width = currentSize.width;
-      lastSize.height = currentSize.height;
+      zoomFactor = currentContainerSize.width / gameWidth;
+      lastContainerSize.width = currentContainerSize.width;
+      lastContainerSize.height = currentContainerSize.height;
     }
-    status.textContent = JSON.stringify(zoomFactor);
+    debug(zoomFactor);
   }
 
   function update(timestamp) {
     const delta = Math.min(timestamp - lastTime, maxDelta)
+
+    // Update all objects
     state.objects.forEach(function updateObj(obj) {
       obj.x = obj.x + Math.cos(obj.angle) * obj.v * delta;
       obj.y = obj.y + Math.sin(obj.angle) * obj.v * delta;
-      // status.textContent = JSON.stringify(obj);
-      // status.textContent = JSON.stringify(lastSize)
-
     });
   }
 
   function render() {
-
+    // Reset canvas
     ctx.resetTransform();
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.translate(canvas.width/2, canvas.height/2);
     ctx.scale(zoomFactor, -1 * zoomFactor);
 
+    // Render all objects
     state.objects.forEach(function renderObj(obj) {
+      ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(obj.x, obj.y, obj.radius, 0, 2 * Math.PI);
       ctx.fill();
-
     });
   }
 
