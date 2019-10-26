@@ -12,7 +12,7 @@
   const gameWidth = canvas.width;
   const gameHeight = gameWidth / aspectRatio;
   const slowMo = 0; // Slow motion factor to slow the loop down for debugging
-  const colors = [[0xef, 0xe4, 0x00], [0xe4, 0x07, 0x66]]; // Player colors
+  const colors = [[0xff, 0xff, 0xff],[0xef, 0xe4, 0x00], [0xe4, 0x07, 0x66]]; // Player colors
 
   // Utility constants
   const tau = Math.PI * 2;
@@ -287,11 +287,18 @@
     //debug({ zoomFactor, w: canvas.width, h: canvas.height, loops, b: state.objects[0] });
   }
 
+  let q = gameWidth / 4 - 20;
 
-  state.objects.push(new Ball({ x:  0, y:  0, dx: 0.0, dy: 0.0, radius: 5, fixed: true, color: colors[0], mass: 999999 }));
+  // fix bumper
+  state.objects.push(new Ball({ x:  0, y:  gameWidth/2 - 20, dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
+  state.objects.push(new Ball({ x:  0, y:  -(gameWidth/2 - 20), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
+  state.objects.push(new Ball({ x:  gameHeight/2 - q, y:  -(gameWidth/2 - 35), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
+  state.objects.push(new Ball({ x:  gameHeight/2 - q, y:  (gameWidth/2 - 35), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
+  state.objects.push(new Ball({ x:  -gameHeight/2 + q, y:  (gameWidth/2 - 35), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
+  state.objects.push(new Ball({ x:  -gameHeight/2 + q, y:  -(gameWidth/2 - 35), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
+
   state.objects.push(new Ball({ x: 10, y: 20, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[1], mass: 1 }));
-  state.objects.push(new Ball({ x: 40, y: 10, dx: 0.03, dy: 0.03, radius: 5, fixed: false, color: colors[0], mass: 1 }));
-  // state.objects.push(new Ball({ x: 10, y: -30, dx: 0.04, dy: 0.04, radius: 4, color: colors[1] }));
+  state.objects.push(new Ball({ x: 40, y: 10, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[2], mass: 1 }));
 
   // Start looping
   loop(0);
