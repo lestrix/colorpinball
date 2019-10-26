@@ -5,6 +5,7 @@
   const maxDelta = 50; // Clamp update timestep, to avoid large skips
   const aspectRatio = 1.65;
   const gameWidth = 100;
+  const gameHeight = gameWidth / aspectRatio;
   const slowMo = 0; // Slow motion factor to slow the loop down for debugging
   const colors = [[0xef, 0xe4, 0x00], [0xe4, 0x07, 0x66]]; // Player colors
 
@@ -92,6 +93,27 @@
     },
   };
 
+  const isBounded = {
+    update: function (ent, delta) {
+      if (ent.y + ent.radius >= gameHeight / 2 ) { // top
+        ent.y = gameHeight / 2 - ent.radius;
+        ent.dir = (tau - ent.dir) % tau;
+      }
+      if (ent.x + ent.radius >= gameWidth / 2 ) { // right
+        ent.x = gameWidth / 2 - ent.radius;
+        ent.dir = (tau - ent.dir + Math.PI) % tau;
+      }
+      if (-ent.y + ent.radius >= gameHeight / 2 ) { // bottom
+        ent.y = -gameHeight / 2 + ent.radius;
+        ent.dir = (tau - ent.dir) % tau;
+      }
+      if (-ent.x + ent.radius >= gameWidth / 2 ) { // left
+        ent.x = -gameWidth / 2 + ent.radius;
+        ent.dir = (tau - ent.dir + Math.PI) % tau;
+      }
+    }
+  };
+
   // Basic entity type - handles applying an entity's traits
   const Entity = function () {};
   Entity.prototype.update = function (delta) {
@@ -136,7 +158,7 @@
     x: 0, y: 0, radius: 4, v: 0, dir: 0, color: [255, 255, 255], fixed: false,
   };
   Ball.prototype.traits = [
-    hasTrace, moves, collides,
+    hasTrace, moves, collides, isBounded,
   ];
   Ball.prototype.draw = function (ctx) {
     ctx.beginPath();
@@ -223,7 +245,7 @@
     //debug({ zoomFactor, w: canvas.width, h: canvas.height, loops, b: state.objects[0] });
   }
 
-  state.objects.push(new Ball({ x:  0, y:  0, v: 0.009,  dir:  0.2, radius: 5, color: colors[0] }));
+  state.objects.push(new Ball({ x:  0, y:  0, v: 0.009,  dir:  3.14, radius: 5, color: colors[0] }));
   state.objects.push(new Ball({ x: 10, y: 20, v: 0.008, dir: -1, radius: 3, color: colors[1] }));
 
   // Start looping
