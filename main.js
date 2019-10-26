@@ -72,12 +72,6 @@
     },
   };
 
-  const updatePhysics = {
-    update: function (ent) {
-      ent.x = ent.physicsObject.position.x;
-      ent.y = ent.physicsObject.position.y;
-    }
-  };
 
   const moves = {
     update: function (ent, delta) {
@@ -124,13 +118,12 @@
           } else {
             otherEnt.color = this.color;
           }
-          console.log('colliding')
           collidingPairs.push([this, otherEnt]);
 
 
         }
       }, ent);
-      debug(collidingPairs);
+      // debug(collidingPairs);
     },
   };
 
@@ -182,7 +175,6 @@
         && a.yMin < b.yMax && a.yMax > b.yMin;
   };
 
-
   // Concrete entity types
 
   const Ball = function (props) {
@@ -222,6 +214,50 @@
       yMin: this.y - this.radius, yMax: this.y + this.radius,
     };
   };
+
+
+  //Rectangle
+  const Rectangle = function (props) {
+    Object.assign(this, Rectangle.prototype.defaults, props);
+    Rectangle.prototype.traits.forEach(function (trait) {
+      if (typeof trait.create === 'function') {
+        trait.create(this);
+      }
+    }, this);
+  };
+  Object.setPrototypeOf(Rectangle.prototype, Entity.prototype);
+  Rectangle.prototype.super = Entity.prototype;
+  Rectangle.prototype.maxTraceLength = 32;
+  Rectangle.prototype.defaults = {
+    x1: 0, y1: 0, color: [255, 255, 255], fixed: false,
+  };
+  Rectangle.prototype.angle = function () {
+    return Math.atan2(this.dy, this.dx);
+  }
+  Rectangle.prototype.speed = function () {
+    return Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+  }
+  Rectangle.prototype.traits = [
+    hasTrace, moves, collides, isBounded,
+  ];
+  Rectangle.prototype.draw = function (ctx) {
+                ctx.fillStyle = 'gray';
+    ctx.rotate(45 * Math.PI / 180);
+
+    ctx.fillRect(this.x1, this.y1, 10, 10);
+
+
+    ctx.fillStyle = transparentize(this.color, 1);
+    // ctx.fill();
+
+  };
+  Rectangle.prototype.aabb = function () {
+    return {
+      xMin: this.x - this.radius, xMax: this.x + this.radius,
+      yMin: this.y - this.radius, yMax: this.y + this.radius,
+    };
+  };
+
 
   // Adjust the canvas size to the container size in case it changed
   function resizeCanvas() {
@@ -290,10 +326,8 @@
 
   let k = gameWidth / 4 - 17;
   let l = gameWidth / 4  + 10;
-  console.log(k)
-  console.log(l)
 
-  // fix bumper
+  // bumper
   state.objects.push(new Ball({ x:  0, y:  gameWidth/2 - 20, dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
   state.objects.push(new Ball({ x:  0, y:  -(gameWidth/2 - 20), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
   state.objects.push(new Ball({ x:  gameHeight/2 - k, y:  -(gameWidth/2 - l), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
@@ -301,8 +335,12 @@
   state.objects.push(new Ball({ x:  -gameHeight/2 + k, y:  (gameWidth/2 - l), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
   state.objects.push(new Ball({ x:  -gameHeight/2 + k, y:  -(gameWidth/2 - l), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
 
+  // ball
   state.objects.push(new Ball({ x: 20, y: 0, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[1], mass: 1 }));
   state.objects.push(new Ball({ x: -20, y: 0, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[2], mass: 1 }));
+
+  // rectangle
+  state.objects.push(new Rectangle({ x1: -5, y1: -5, fixed: false, color: colors[2], mass: 1 }));
 
   // Start looping
   loop(0);

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Color Pinball</title>
+
+</head>
+<body>
+   <canvas id="canvas" width="1000" height="1000"></canvas>
+<pre id="debug"></pre>
+<script charset="utf-8">
+
+    function transparentize(rgb, alpha) {
+        return `rgba(${rgb.join(',')},${alpha})`;
+    }
+    function draw() {
+        var canvas = document.getElementById('canvas');
+        if (canvas.getContext) {
+            var ctx = canvas.getContext('2d');
+
+
+// Non-rotated rectangle
+//             ctx.fillStyle = 'gray';
+                        ctx.rotate(45 * Math.PI / 180);
+
+            ctx.fillRect(100, 0, 80, 20);
+//
+// // Rotated rectangle
+//             ctx.rotate(45 * Math.PI / 180);
+//             ctx.fillStyle = 'red';
+//             ctx.fillRect(100, 0, 80, 20);
+
+// Reset transformation matrix to the identity matrix
+//             ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+    }
+
+
+
+    draw();
+
+</script>
+</body>
+</html>
