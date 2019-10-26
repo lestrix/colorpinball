@@ -1,7 +1,7 @@
 (function(){
   "use strict";
 
-  // configs
+  // Configs
   const maxDelta = 50;
   const aspectRatio = 1.65;
   const gameWidth = 100;
@@ -19,43 +19,54 @@
     ],
   };
 
-  const lastContainerSize = { width: 0, height: 0 };
-  let lastTime = 0;
-  let zoomFactor = 1;
+  const lastContainerSize = { width: 0, height: 0 }; // Store to detect change
+  let loops = 0;
+  let lastTime = 0; // Timestamp of the last loop run
+  let zoomFactor = 1; // Scaling to render at full resolution of the canvas
 
+  // Print the argument for debugging and return it, so the function can be
+  // inserted in most places seamlessly.
   function debug(value) {
     debugElement.textContent = JSON.stringify(value);
+    return value;
   }
 
+  // Adjust the canvas size to the container size in case it changed
   function resizeCanvas() {
     const currentContainerSize = container.getBoundingClientRect();
+
+    // Check if the size changed
     if (currentContainerSize.width !== lastContainerSize.width
       || currentContainerSize.height !== lastContainerSize.height
     ) {
+      // Check if the size is limited by height or width
       if (currentContainerSize.width / aspectRatio > currentContainerSize.height) {
+        // Limited by height
         canvas.height = currentContainerSize.height;
         canvas.width = currentContainerSize.height * aspectRatio;
       } else {
+        // Limited by width
         canvas.width = currentContainerSize.width;
         canvas.height = currentContainerSize.width / aspectRatio;
       }
+
       zoomFactor = currentContainerSize.width / gameWidth;
       lastContainerSize.width = currentContainerSize.width;
       lastContainerSize.height = currentContainerSize.height;
     }
-    debug(zoomFactor);
   }
 
+  // Update the game state
   function update(timestamp) {
     const delta = Math.min(timestamp - lastTime, maxDelta)
 
-    // Update all objects
     state.objects.forEach(function updateObj(obj) {
       obj.x = obj.x + Math.cos(obj.angle) * obj.v * delta;
       obj.y = obj.y + Math.sin(obj.angle) * obj.v * delta;
     });
   }
 
+  // Render the game
   function render() {
     // Reset canvas
     ctx.resetTransform();
@@ -72,12 +83,16 @@
     });
   }
 
+  // Game loop
   function loop(timestamp) {
     window.requestAnimationFrame(loop);
+    loops += 1;
     resizeCanvas();
     update(timestamp);
     render();
+    debug({ zoomFactor, w: canvas.width, h: canvas.height, loops });
   }
 
+  // Start looping
   loop(0);
 })()
