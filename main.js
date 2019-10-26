@@ -298,8 +298,8 @@
   state.objects.push(new Ball({ x:  -gameHeight/2 + q, y:  (gameWidth/2 - 35), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
   state.objects.push(new Ball({ x:  -gameHeight/2 + q, y:  -(gameWidth/2 - 35), dx: 0.0, dy: 0.0, radius: 7, fixed: true, color: colors[0], mass: 999999 }));
 
-  state.objects.push(new Ball({ x: 10, y: 20, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[1], mass: 1 }));
-  state.objects.push(new Ball({ x: 40, y: 10, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[2], mass: 1 }));
+  state.objects.push(new Ball({ x: 20, y: 0, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[1], mass: 1 }));
+  state.objects.push(new Ball({ x: -20, y: 0, dx: 0.02, dy: 0.02, radius: 3, fixed: false, color: colors[2], mass: 1 }));
 
   // Start looping
   loop(0);
