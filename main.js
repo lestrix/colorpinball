@@ -27,15 +27,8 @@
     debugElement.textContent = JSON.stringify(value);
   }
 
-  function getNodeSize(node) {
-    return {
-      width: node.clientWidth,
-      height: node.clientHeight,
-    };
-  }
-
   function resizeCanvas() {
-    const currentContainerSize = getNodeSize(container);
+    const currentContainerSize = container.getBoundingClientRect();
     if (currentContainerSize.width !== lastContainerSize.width
       || currentContainerSize.height !== lastContainerSize.height
     ) {
